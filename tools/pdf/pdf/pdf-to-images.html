@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-zh="PDF转图片 - 前端PDF工具箱" data-en="PDF to Images - Frontend PDF Toolbox">PDF转图片 - 前端PDF工具箱</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
+
+
+
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding-top: 100px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 导航栏 */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 功能页面 */
+        .feature-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .feature-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .feature-content {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e6fffa;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #a0aec0;
+        }
+
+        .upload-text {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-list {
+            margin-bottom: 2rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.2rem;
+        }
+
+        .file-size {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #c53030;
+        }
+
+        /* 格式选择选项 */
+        .format-options {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .option-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .option-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .option-label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .format-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .format-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .format-item.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .format-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .format-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.9rem;
+        }
+
+        /* 质量设置 */
+        .quality-options {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .quality-slider {
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .quality-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+            }
+
+            .nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .feature-content {
+                padding: 2rem;
+            }
+
+            .feature-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav">
+        <a href="index.html" class="logo" data-zh="前端PDF工具箱" data-en="Frontend PDF Toolbox">前端PDF工具箱</a>
+        <div class="nav-right">
+            <a href="index.html" class="back-btn" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="feature-header">
+            <h1 class="feature-title" data-zh="PDF转图片" data-en="PDF to Images">PDF转图片</h1>
+            <p class="feature-subtitle" data-zh="将PDF页面转换为图片格式" data-en="Convert PDF pages to image format">将PDF页面转换为图片格式</p>
+        </header>
+
+        <div class="feature-content">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-text" data-zh="点击选择文件或拖拽到此处" data-en="Click to select files or drag and drop here">点击选择文件或拖拽到此处</div>
+                <div class="upload-hint" data-zh="支持PDF格式文件" data-en="Support PDF format files">支持PDF格式文件</div>
+            </div>
+
+            <input type="file" id="fileInput" accept=".pdf">
+
+            <div class="file-list" id="fileList"></div>
+
+            <!-- 格式选择选项 -->
+            <div class="format-options" id="formatOptions" style="display: none;">
+                <div class="option-group">
+                    <label class="option-label" data-zh="选择输出格式" data-en="Select Output Format">选择输出格式</label>
+                    <div class="format-grid" id="formatGrid">
+                        <div class="format-item selected" data-format="png" onclick="selectFormat('png')">
+                            <div class="format-icon">🖼️</div>
+                            <div class="format-name">PNG</div>
+                        </div>
+                        <div class="format-item" data-format="jpeg" onclick="selectFormat('jpeg')">
+                            <div class="format-icon">📷</div>
+                            <div class="format-name">JPEG</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 质量设置选项 -->
+            <div class="quality-options" id="qualityOptions" style="display: none;">
+                <div class="option-group">
+                    <label class="option-label" data-zh="图片质量" data-en="Image Quality">图片质量</label>
+                    <input type="range" class="quality-slider" id="qualitySlider" min="0.5" max="3" step="0.1" value="2">
+                    <div class="quality-labels">
+                        <span data-zh="低质量" data-en="Low Quality">低质量</span>
+                        <span id="qualityValue">2.0x</span>
+                        <span data-zh="高质量" data-en="High Quality">高质量</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <button class="btn" id="processBtn" onclick="convertToImages()" data-zh="开始转换" data-en="Start Converting" disabled>开始转换</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <script>
+        // 语言管理
+        let currentLanguage = 'zh';
+        let pdfFile = null;
+        let selectedFormat = 'png';
+
+        // 检测系统语言并设置初始语言
+        function initLanguage() {
+            const systemLang = navigator.language || navigator.userLanguage;
+            currentLanguage = systemLang.startsWith('zh') ? 'zh' : 'en';
+            updateLanguage();
+        }
+
+        // 更新页面语言
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-zh][data-en]');
+            elements.forEach(element => {
+                const text = element.getAttribute(`data-${currentLanguage}`);
+                if (text) {
+                    element.textContent = text;
+                }
+            });
+
+            document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en';
+        }
+
+        // 文件处理
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                pdfFile = file;
+                updateFileList();
+                document.getElementById('formatOptions').style.display = 'block';
+                document.getElementById('qualityOptions').style.display = 'block';
+                document.getElementById('processBtn').disabled = false;
+            }
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            if (pdfFile) {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">PDF</div>
+                        <div class="file-details">
+                            <div class="file-name">${pdfFile.name}</div>
+                            <div class="file-size">${formatFileSize(pdfFile.size)}</div>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFile()">${currentLanguage === 'zh' ? '删除' : 'Remove'}</button>
+                `;
+                fileList.appendChild(fileItem);
+            }
+        }
+
+        function removeFile() {
+            pdfFile = null;
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('formatOptions').style.display = 'none';
+            document.getElementById('qualityOptions').style.display = 'none';
+            document.getElementById('processBtn').disabled = true;
+        }
+
+        function selectFormat(format) {
+            selectedFormat = format;
+            document.querySelectorAll('.format-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-format="${format}"]`).classList.add('selected');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 质量滑块更新
+        document.getElementById('qualitySlider').addEventListener('input', function() {
+            document.getElementById('qualityValue').textContent = parseFloat(this.value).toFixed(1) + 'x';
+        });
+
+        async function convertToImages() {
+            if (!pdfFile) return;
+
+            const processBtn = document.getElementById('processBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const quality = parseFloat(document.getElementById('qualitySlider').value);
+
+            processBtn.disabled = true;
+            processBtn.textContent = currentLanguage === 'zh' ? '处理中...' : 'Processing...';
+            progressBar.style.display = 'block';
+
+            try {
+                const arrayBuffer = await pdfFile.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                const totalPages = pdf.numPages;
+
+                progressFill.style.width = '10%';
+
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: quality });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+
+                    // 转换为指定格式
+                    const mimeType = selectedFormat === 'png' ? 'image/png' : 'image/jpeg';
+                    const imageQuality = selectedFormat === 'jpeg' ? 0.9 : undefined;
+                    
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${pdfFile.name.replace('.pdf', '')}_page_${pageNum}.${selectedFormat}`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    }, mimeType, imageQuality);
+
+                    const progress = 10 + (pageNum / totalPages) * 90;
+                    progressFill.style.width = progress + '%';
+                }
+
+            } catch (error) {
+                alert(currentLanguage === 'zh' ? '转换失败，请检查文件是否有效' : 'Conversion failed, please check if file is valid');
+            }
+
+            processBtn.disabled = false;
+            processBtn.textContent = currentLanguage === 'zh' ? '开始转换' : 'Start Converting';
+            progressBar.style.display = 'none';
+            progressFill.style.width = '0%';
+        }
+
+        // 拖拽上传
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        // 页面加载完成后初始化语言
+        document.addEventListener('DOMContentLoaded', function () {
+            initLanguage();
+        });
+    </script>
+    <script src="../js/footer.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正在跳转...</title>
+    
+    <!-- 立即重定向到 pdf/index.html -->
+    <meta http-equiv="refresh" content="0; url=pdf/index.html">
+    
+    <!-- 备用JavaScript重定向 -->
+    <script>
+        // 立即跳转
+        window.location.replace('pdf/index.html');
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .redirect-container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .redirect-text {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .manual-link {
+            color: white;
+            text-decoration: underline;
+            font-size: 1rem;
+        }
+        
+        .manual-link:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-container">
+        <div class="spinner"></div>
+        <div class="redirect-text">正在跳转到 PDF 工具站...</div>
+        <p>如果页面未自动跳转，请<a href="pdf/index.html" class="manual-link">点击这里</a></p>
+    </div>
+    
+    <!-- 额外的JavaScript确保重定向 -->
+    <script>
+        // 如果前面的重定向没有生效，3秒后再次尝试
+        setTimeout(function() {
+            if (window.location.pathname !== '/pdf/index.html') {
+                window.location.href = 'pdf/index.html';
+            }
+        }, 3000);
+        
+        // 防止用户看到重定向页面太久
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                window.location.href = 'pdf/index.html';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

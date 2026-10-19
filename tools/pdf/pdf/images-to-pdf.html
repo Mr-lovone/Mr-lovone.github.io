@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-zh="图片转PDF - 前端PDF工具箱" data-en="Images to PDF - Frontend PDF Toolbox">图片转PDF - 前端PDF工具箱</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
+    
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding-top: 100px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 导航栏 */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 功能页面 */
+        .feature-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .feature-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .feature-content {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e6fffa;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #a0aec0;
+        }
+
+        .upload-text {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-list {
+            margin-bottom: 2rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .file-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .file-item.drag-over {
+            border-color: #667eea;
+            background: #edf2f7;
+            transform: translateY(-2px);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: #a0aec0;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .drag-handle:hover {
+            background: #e2e8f0;
+            color: #667eea;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.2rem;
+        }
+
+        .file-size {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #c53030;
+        }
+
+        /* 页面设置选项 */
+        .page-size-options {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .option-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .option-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .option-label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-size-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .page-size-item {
+            padding: 0.75rem;
+            text-align: center;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .page-size-item:hover {
+            border-color: #667eea;
+        }
+
+        .page-size-item.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+            }
+
+            .nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .feature-content {
+                padding: 2rem;
+            }
+
+            .feature-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav">
+        <a href="index.html" class="logo" data-zh="前端PDF工具箱" data-en="Frontend PDF Toolbox">前端PDF工具箱</a>
+        <div class="nav-right">
+            <a href="index.html" class="back-btn" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="feature-header">
+            <h1 class="feature-title" data-zh="图片转PDF" data-en="Images to PDF">图片转PDF</h1>
+            <p class="feature-subtitle" data-zh="将多张图片合并为PDF文档" data-en="Combine multiple images into PDF document">将多张图片合并为PDF文档</p>
+        </header>
+
+        <div class="feature-content">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text" data-zh="点击选择文件或拖拽到此处" data-en="Click to select files or drag and drop here">点击选择文件或拖拽到此处</div>
+                <div class="upload-hint" data-zh="支持JPG、PNG、GIF等图片格式，可拖拽调整顺序" data-en="Support JPG, PNG, GIF and other image formats, drag to adjust order">支持JPG、PNG、GIF等图片格式，可拖拽调整顺序</div>
+            </div>
+
+            <input type="file" id="fileInput" accept="image/*" multiple>
+
+            <div class="file-list" id="fileList"></div>
+
+            <!-- 页面大小选项 -->
+            <div class="page-size-options" id="pageSizeOptions" style="display: none;">
+                <div class="option-group">
+                    <label class="option-label" data-zh="页面大小" data-en="Page Size">页面大小</label>
+                    <div class="page-size-grid">
+                        <div class="page-size-item selected" data-size="A4" onclick="selectPageSize('A4')">A4</div>
+                        <div class="page-size-item" data-size="A3" onclick="selectPageSize('A3')">A3</div>
+                        <div class="page-size-item" data-size="A5" onclick="selectPageSize('A5')">A5</div>
+                        <div class="page-size-item" data-size="Letter" onclick="selectPageSize('Letter')">Letter</div>
+                        <div class="page-size-item" data-size="Legal" onclick="selectPageSize('Legal')">Legal</div>
+                        <div class="page-size-item" data-size="Original" onclick="selectPageSize('Original')" data-zh="原始大小" data-en="Original Size">原始大小</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <button class="btn" id="processBtn" onclick="convertToPDF()" data-zh="生成PDF" data-en="Generate PDF" disabled>生成PDF</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    
+    <script>
+        // 语言管理
+        let currentLanguage = 'zh';
+        let imageFiles = [];
+        let selectedPageSize = 'A4';
+
+        // 页面尺寸定义 (points, 1 point = 1/72 inch)
+        const pageSizes = {
+            'A4': [595, 842],
+            'A3': [842, 1191],
+            'A5': [420, 595],
+            'Letter': [612, 792],
+            'Legal': [612, 1008],
+            'Original': null
+        };
+
+        // 检测系统语言并设置初始语言
+        function initLanguage() {
+            const systemLang = navigator.language || navigator.userLanguage;
+            currentLanguage = systemLang.startsWith('zh') ? 'zh' : 'en';
+            updateLanguage();
+        }
+
+        // 更新页面语言
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-zh][data-en]');
+            elements.forEach(element => {
+                const text = element.getAttribute(`data-${currentLanguage}`);
+                if (text) {
+                    element.textContent = text;
+                }
+            });
+
+            document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en';
+        }
+
+        // 文件处理
+        document.getElementById('fileInput').addEventListener('change', handleFiles);
+
+        function handleFiles(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    imageFiles.push({
+                        file: file,
+                        name: file.name,
+                        size: file.size
+                    });
+                }
+            });
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            imageFiles.forEach((item, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="drag-handle">⋮⋮</div>
+                        <div class="file-icon">IMG</div>
+                        <div class="file-details">
+                            <div class="file-name">${item.name}</div>
+                            <div class="file-size">${formatFileSize(item.size)}</div>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFile(${index})">${currentLanguage === 'zh' ? '删除' : 'Remove'}</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+
+            document.getElementById('pageSizeOptions').style.display = imageFiles.length > 0 ? 'block' : 'none';
+            document.getElementById('processBtn').disabled = imageFiles.length === 0;
+        }
+
+        function removeFile(index) {
+            imageFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function selectPageSize(size) {
+            selectedPageSize = size;
+            document.querySelectorAll('.page-size-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-size="${size}"]`).classList.add('selected');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function loadImage(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function convertToPDF() {
+            if (imageFiles.length === 0) return;
+
+            const processBtn = document.getElementById('processBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            processBtn.disabled = true;
+            processBtn.textContent = currentLanguage === 'zh' ? '处理中...' : 'Processing...';
+            progressBar.style.display = 'block';
+
+            try {
+                const pdfDoc = await PDFLib.PDFDocument.create();
+
+                for (let i = 0; i < imageFiles.length; i++) {
+                    const progress = (i / imageFiles.length) * 90;
+                    progressFill.style.width = progress + '%';
+
+                    const imageFile = imageFiles[i].file;
+                    const imageArrayBuffer = await imageFile.arrayBuffer();
+                    
+                    let image;
+                    if (imageFile.type === 'image/jpeg' || imageFile.type === 'image/jpg') {
+                        image = await pdfDoc.embedJpg(imageArrayBuffer);
+                    } else if (imageFile.type === 'image/png') {
+                        image = await pdfDoc.embedPng(imageArrayBuffer);
+                    } else {
+                        // 对于其他格式，先转换为canvas再转为PNG
+                        const img = await loadImage(imageFile);
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        
+                        const pngData = await new Promise(resolve => {
+                            canvas.toBlob(async (blob) => {
+                                const arrayBuffer = await blob.arrayBuffer();
+                                resolve(arrayBuffer);
+                            }, 'image/png');
+                        });
+                        
+                        image = await pdfDoc.embedPng(pngData);
+                        URL.revokeObjectURL(img.src);
+                    }
+
+                    const imageDims = image.scale(1);
+                    let pageWidth, pageHeight;
+
+                    if (selectedPageSize === 'Original') {
+                        pageWidth = imageDims.width;
+                        pageHeight = imageDims.height;
+                    } else {
+                        [pageWidth, pageHeight] = pageSizes[selectedPageSize];
+                    }
+
+                    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+                    // 计算图片在页面上的位置和尺寸，保持宽高比
+                    let drawWidth, drawHeight, x, y;
+
+                    if (selectedPageSize === 'Original') {
+                        drawWidth = imageDims.width;
+                        drawHeight = imageDims.height;
+                        x = 0;
+                        y = 0;
+                    } else {
+                        const imageRatio = imageDims.width / imageDims.height;
+                        const pageRatio = pageWidth / pageHeight;
+
+                        if (imageRatio > pageRatio) {
+                            // 图片更宽，以宽度为基准
+                            drawWidth = pageWidth;
+                            drawHeight = pageWidth / imageRatio;
+                        } else {
+                            // 图片更高，以高度为基准
+                            drawHeight = pageHeight;
+                            drawWidth = pageHeight * imageRatio;
+                        }
+
+                        x = (pageWidth - drawWidth) / 2;
+                        y = (pageHeight - drawHeight) / 2;
+                    }
+
+                    page.drawImage(image, {
+                        x: x,
+                        y: y,
+                        width: drawWidth,
+                        height: drawHeight,
+                    });
+                }
+
+                progressFill.style.width = '95%';
+
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'images_to_pdf.pdf';
+                a.click();
+
+                URL.revokeObjectURL(url);
+
+                progressFill.style.width = '100%';
+
+            } catch (error) {
+                alert(currentLanguage === 'zh' ? '转换失败，请检查图片文件是否有效' : 'Conversion failed, please check if image files are valid');
+            }
+
+            processBtn.disabled = false;
+            processBtn.textContent = currentLanguage === 'zh' ? '生成PDF' : 'Generate PDF';
+            progressBar.style.display = 'none';
+            progressFill.style.width = '0%';
+        }
+
+        // 拖拽上传
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    imageFiles.push({
+                        file: file,
+                        name: file.name,
+                        size: file.size
+                    });
+                }
+            });
+            updateFileList();
+        });
+
+        // 拖拽排序功能
+        let draggedElement = null;
+
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('drag-handle') && e.target.parentElement.parentElement.classList.contains('file-item')) {
+                draggedElement = e.target.parentElement.parentElement;
+                draggedElement.classList.add('dragging');
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(e.clientY);
+            const fileList = document.getElementById('fileList');
+            
+            if (afterElement == null) {
+                fileList.appendChild(draggedElement);
+            } else {
+                fileList.insertBefore(draggedElement, afterElement);
+            }
+        });
+
+        function getDragAfterElement(y) {
+            const draggableElements = [...document.querySelectorAll('.file-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // 页面加载完成后初始化语言
+        document.addEventListener('DOMContentLoaded', function () {
+            initLanguage();
+        });
+    </script>
+    <script src="../js/footer.js"></script>
+</body>
+
+</html>

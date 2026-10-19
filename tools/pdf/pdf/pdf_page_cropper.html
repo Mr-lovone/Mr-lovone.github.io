@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF页面裁剪工具 - 多页支持</title>
+
+    <!-- SEO优化 meta 标签 -->
+    <meta name="description" content="免费在线PDF裁剪工具，支持PDF页面裁剪、PDF分割、A4裁A5、标签打印。多页面批量处理，自定义尺寸，无需安装软件，浏览器直接使用。">
+    
+    <meta name="keywords" content="PDF裁剪,PDF页面裁剪,PDF A4裁A5,PDF页面分割,PDF标签打印,PDF切割,PDF尺寸调整,在线PDF工具,PDF编辑器,PDF批量处理">
+    
+    <meta name="author" content="PDF裁剪工具">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph 标签 (社交媒体分享) -->
+    <meta property="og:title" content="PDF裁剪工具 - 在线PDF页面裁剪分割">
+    <meta property="og:description" content="专业的在线PDF裁剪工具，支持多页面批量处理，自定义尺寸裁剪">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xiaxufeng.github.io">
+    
+    <!-- 结构化数据 -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "PDF裁剪工具",
+        "description": "免费在线PDF裁剪工具，支持PDF页面裁剪、分割、A4裁A5、标签打印",
+        "url": "https://xiaxufeng.github.io",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding-top: 100px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 导航栏 */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+            padding: 40px;
+            border: 3px dashed #e0e7ff;
+            border-radius: 16px;
+            text-align: center;
+            background: linear-gradient(145deg, #f8faff 0%, #e0e7ff 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .upload-section:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .upload-section:hover::before {
+            left: 100%;
+        }
+
+        .upload-section h3 {
+            color: #4c1d95;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .file-input {
+            margin: 20px 0;
+            padding: 12px 24px;
+            border: 2px solid #e0e7ff;
+            border-radius: 12px;
+            background: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .preview-section {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .upload-pdf-btn,
+        .remove-pdf-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .remove-pdf-btn {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        }
+
+        .upload-pdf-btn:hover,
+        .remove-pdf-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-status {
+            color: #4c1d95;
+            font-weight: 600;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+        }
+
+        .preview-area {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .controls-area {
+            flex: 0 0 320px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .page-controls {
+            background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .page-controls-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .page-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-nav button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            font-size: 14px;
+        }
+
+        .page-nav button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .page-nav button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .page-nav button:disabled {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .page-info {
+            font-weight: 700;
+            color: #4c1d95;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .crop-mode {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .crop-mode label {
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: #4c1d95;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .crop-mode label:hover {
+            color: #667eea;
+        }
+
+        .crop-mode input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
+        }
+
+        .preview-container {
+            position: relative;
+            display: block;
+            border: 1px solid #e0e7ff;
+            margin: 20px 0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: white;
+            height: auto;
+            min-height: 400px;
+            max-width: 100%;
+            max-height: 80vh;
+            width: fit-content;
+        }
+
+        .preview-container.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 1.2rem;
+            font-weight: 600;
+            height: 400px;
+            width: 100%;
+        }
+
+        .preview-container.empty::before {
+            content: '点击上方按钮选择PDF文件';
+        }
+
+        #pdfCanvas {
+            max-width: 100%;
+            cursor: crosshair;
+            display: block;
+        }
+
+        .crop-overlay {
+            position: absolute;
+            border: 3px solid #667eea;
+            background: rgba(102, 126, 234, 0.15);
+            cursor: move;
+            display: none;
+            user-select: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .crop-overlay::before {
+            content: attr(data-size);
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .crop-overlay:hover {
+            border-color: #4c1d95;
+            background: rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .crop-overlay.dragging {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.2);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .custom-size {
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #4c1d95;
+            font-size: 0.85rem;
+        }
+
+        input[type="number"] {
+            padding: 8px 10px;
+            border: 2px solid #e0e7ff;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="number"]:read-only {
+            background: #f8faff;
+            color: #64748b;
+        }
+
+        .crop-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 12px 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .crop-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .crop-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .crop-button:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .crop-button:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .crop-button:disabled {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .crop-button.primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .crop-button.reset {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+            padding: 8px 16px;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .size-controls {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .preset-sizes label {
+            font-weight: 700;
+            color: #4c1d95;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .size-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .size-button {
+            background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+            border: 2px solid #e0e7ff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            color: #4c1d95;
+            text-align: left;
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .size-button:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .size-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .size-button.custom {
+            grid-column: 1 / -1;
+        }
+
+        .size-button small {
+            display: block;
+            opacity: 0.8;
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+
+        .size-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .size-inputs .crop-button {
+            grid-column: 1 / -1;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #4c1d95;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .crop-button.secondary {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .crop-button.secondary:hover:not(:disabled) {
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4c1d95;
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 3px;
+            height: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .info {
+            background: linear-gradient(145deg, #e0f2fe 0%, #b3e5fc 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #0288d1;
+            box-shadow: 0 2px 8px rgba(2, 136, 209, 0.1);
+        }
+
+        .info p {
+            margin: 0 0 6px 0;
+            color: #01579b;
+            font-weight: 500;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .info p:last-child {
+            margin-bottom: 0;
+        }
+
+        .coordinates-display {
+            background: linear-gradient(145deg, #f8faff 0%, #e0e7ff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #4c1d95;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            text-align: center;
+        }
+
+        .error {
+            color: #dc2626;
+            background: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 5px solid #dc2626;
+            font-weight: 600;
+        }
+
+        .success {
+            color: #059669;
+            background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 5px solid #059669;
+            font-weight: 600;
+        }
+
+        .progress {
+            background: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 28px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            text-align: center;
+            line-height: 28px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .controls-area {
+                flex: none;
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav">
+        <a href="index.html" class="logo" data-zh="前端PDF工具箱" data-en="Frontend PDF Toolbox">前端PDF工具箱</a>
+        <div class="nav-right">
+            <a href="index.html" class="back-btn" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>PDF页面裁剪工具 - 多尺寸支持 (多页支持)</h1>
+
+        <!-- 隐藏的文件输入 -->
+        <input type="file" id="pdfFile" accept=".pdf" style="display: none;">
+
+        <div class="page-controls">
+            <div class="page-controls-left">
+                <div class="page-nav">
+                    <button id="prevPage" disabled>上一页</button>
+                    <span class="page-info" id="pageInfo">第1页 / 共1页</span>
+                    <button id="nextPage" disabled>下一页</button>
+                </div>
+
+                <div class="crop-mode">
+                    <label>裁剪模式:</label>
+                    <label><input type="radio" name="cropMode" value="current"> 仅当前页</label>
+                    <label><input type="radio" name="cropMode" value="all" checked> 所有页面</label>
+                </div>
+            </div>
+
+            <button class="crop-button reset" id="resetButton">恢复默认</button>
+        </div>
+
+        <div class="main-content">
+            <div class="preview-area">
+                <div class="preview-actions">
+                    <button class="upload-pdf-btn" id="uploadPdfBtn">选择PDF文件</button>
+                    <button class="remove-pdf-btn" id="removePdfBtn" style="display: none;">移除PDF</button>
+                    <span class="upload-status" id="uploadText">未选择文件</span>
+                </div>
+
+                <div class="preview-container empty" id="previewContainer">
+                    <canvas id="pdfCanvas"></canvas>
+                    <div class="crop-overlay" id="cropOverlay"></div>
+                </div>
+            </div>
+
+            <div class="controls-area">
+                <h3 class="section-title" style="margin-top: 0;">尺寸设置</h3>
+                <div class="size-controls">
+                    <div class="preset-sizes">
+                        <label>预设尺寸:</label>
+                        <div class="size-buttons">
+                            <button class="size-button active" data-width="288"
+                                data-height="288">4×4英寸<br><small>288×288px</small></button>
+                            <button class="size-button" data-width="288"
+                                data-height="144">4×2英寸<br><small>288×144px</small></button>
+                            <button class="size-button" data-width="288"
+                                data-height="432">4×6英寸<br><small>288×432px</small></button>
+                            <button class="size-button custom">自定义尺寸</button>
+                        </div>
+                    </div>
+
+                    <div class="custom-size" id="customSizeInputs" style="display: none;">
+                        <div class="size-inputs">
+                            <div class="input-group">
+                                <label for="customWidth">宽度 (像素):</label>
+                                <input type="number" id="customWidth" min="50" max="2000" value="288">
+                            </div>
+                            <div class="input-group">
+                                <label for="customHeight">高度 (像素):</label>
+                                <input type="number" id="customHeight" min="50" max="2000" value="288">
+                            </div>
+                            <button class="crop-button" id="applyCustomSize">应用尺寸</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-title">位置控制</h3>
+                <div class="info" style="margin: 15px 0; padding: 15px; font-size: 0.9rem;">
+                    <p style="margin-bottom: 8px;">点击预览图设置起始点，拖拽蓝色区域移动，方向键微调位置。</p>
+                    <p style="margin-bottom: 0;">PDF尺寸信息将在上传文件后显示。</p>
+                </div>
+
+                <div class="controls">
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="cropX">X坐标 (像素):</label>
+                            <input type="number" id="cropX" min="0" value="15">
+                        </div>
+                        <div class="control-group">
+                            <label for="cropY">Y坐标 (像素):</label>
+                            <input type="number" id="cropY" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="cropWidth">宽度 (像素):</label>
+                            <input type="number" id="cropWidth" min="50" max="2000" value="288" readonly>
+                        </div>
+                        <div class="control-group">
+                            <label for="cropHeight">高度 (像素):</label>
+                            <input type="number" id="cropHeight" min="50" max="2000" value="288" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coordinates-display" id="coordsDisplay">
+                    当前裁剪区域: X=15, Y=0, 宽度=288, 高度=288
+                </div>
+
+                <div class="action-buttons">
+                    <button class="crop-button primary" id="cropButton" disabled>裁剪并下载PDF</button>
+                    <button class="crop-button" id="printButton" disabled>打印裁剪区</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="message"></div>
+        <div id="progressContainer" style="display: none;">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar" style="width: 0%;">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pdfDoc = null;
+        let canvas = null;
+        let ctx = null;
+        let scale = 1;
+        let pdfFile = null;
+        let currentPage = 1;
+        let totalPages = 1;
+        let cropWidth = 288;
+        let cropHeight = 288;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let cropStartX = 0;
+        let cropStartY = 0;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('页面加载完成，开始初始化...');
+
+            canvas = document.getElementById('pdfCanvas');
+            ctx = canvas.getContext('2d');
+
+            // 设置PDF.js worker
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+            // 绑定事件处理器
+            bindEventHandlers();
+
+            console.log('初始化完成');
+        });
+
+        function bindEventHandlers() {
+            // 文件上传处理
+            const fileInput = document.getElementById('pdfFile');
+            const uploadBtn = document.getElementById('uploadPdfBtn');
+            const removeBtn = document.getElementById('removePdfBtn');
+            const previewContainer = document.getElementById('previewContainer');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', () => {
+                    console.log('上传按钮被点击');
+                    fileInput.click();
+                });
+            }
+
+            if (removeBtn) {
+                removeBtn.addEventListener('click', removeFile);
+            }
+
+            if (previewContainer) {
+                previewContainer.addEventListener('click', handlePreviewContainerClick);
+            }
+
+            // 页面导航
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => navigatePage(-1));
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => navigatePage(1));
+            }
+
+            // 画布点击事件
+            if (canvas) {
+                canvas.addEventListener('click', handleCanvasClick);
+            }
+
+            // 拖拽事件
+            const cropOverlay = document.getElementById('cropOverlay');
+            if (cropOverlay) {
+                cropOverlay.addEventListener('mousedown', startDrag);
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', endDrag);
+            }
+
+            // 键盘事件
+            document.addEventListener('keydown', handleKeydown);
+
+            // 坐标输入事件
+            const cropXInput = document.getElementById('cropX');
+            const cropYInput = document.getElementById('cropY');
+
+            if (cropXInput) {
+                cropXInput.addEventListener('input', updateCropOverlay);
+            }
+
+            if (cropYInput) {
+                cropYInput.addEventListener('input', updateCropOverlay);
+            }
+
+            // 尺寸控制事件 - 修复的部分
+            bindSizeButtonEvents();
+
+            const applyCustomBtn = document.getElementById('applyCustomSize');
+            const customWidthInput = document.getElementById('customWidth');
+            const customHeightInput = document.getElementById('customHeight');
+
+            if (applyCustomBtn) {
+                applyCustomBtn.addEventListener('click', applyCustomSize);
+            }
+
+            if (customWidthInput) {
+                customWidthInput.addEventListener('input', validateCustomSize);
+            }
+
+            if (customHeightInput) {
+                customHeightInput.addEventListener('input', validateCustomSize);
+            }
+
+            // 恢复默认参数按钮
+            const resetBtn = document.getElementById('resetButton');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetToDefaults);
+            }
+
+            // 操作按钮事件
+            const cropBtn = document.getElementById('cropButton');
+            const printBtn = document.getElementById('printButton');
+
+            if (cropBtn) {
+                cropBtn.addEventListener('click', cropPDF);
+            }
+
+            if (printBtn) {
+                printBtn.addEventListener('click', printCropArea);
+            }
+        }
+
+        // 修复预设尺寸按钮事件绑定
+        function bindSizeButtonEvents() {
+            const sizeButtons = document.querySelectorAll('.size-button');
+            console.log('找到尺寸按钮数量:', sizeButtons.length);
+
+            sizeButtons.forEach((button, index) => {
+                console.log(`绑定第${index + 1}个按钮事件:`, button.textContent.trim());
+
+                // 移除可能存在的旧事件监听器
+                button.removeEventListener('click', handleSizeButtonClick);
+
+                // 添加新的事件监听器
+                button.addEventListener('click', function (event) {
+                    console.log('尺寸按钮被点击:', event.target.textContent.trim());
+                    handleSizeButtonClick(event);
+                });
+            });
+        }
+
+        // 处理预览容器点击
+        function handlePreviewContainerClick(event) {
+            if (!pdfFile && document.getElementById('previewContainer').classList.contains('empty')) {
+                document.getElementById('pdfFile').click();
+            }
+        }
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                showMessage('正在加载PDF...', 'info');
+
+                // 存储原始File对象
+                pdfFile = file;
+
+                // 读取文件用于预览
+                const arrayBuffer = await file.arrayBuffer();
+
+                // 使用PDF.js加载PDF进行预览
+                const loadingTask = pdfjsLib.getDocument(new Uint8Array(arrayBuffer));
+                pdfDoc = await loadingTask.promise;
+
+                // 获取总页数
+                totalPages = pdfDoc.numPages;
+                currentPage = 1;
+
+                // 渲染第一页
+                await renderPage(currentPage);
+
+                // 更新页面控件
+                updatePageControls();
+
+                // 显示预览区域
+                const previewContainer = document.getElementById('previewContainer');
+                previewContainer.classList.remove('empty');
+                previewContainer.classList.add('has-pdf');
+
+                // 启用按钮
+                document.getElementById('cropButton').disabled = false;
+                document.getElementById('printButton').disabled = false;
+
+                // 显示移除文件按钮
+                document.getElementById('removePdfBtn').style.display = 'inline-block';
+                document.getElementById('uploadText').textContent = `已选择: ${file.name} (${totalPages}页)`;
+
+                // 立即显示裁剪区域预览
+                updateCropOverlay();
+
+                showMessage(`PDF加载成功！共${totalPages}页，点击图像设置裁剪区域。`, 'success');
+
+            } catch (error) {
+                console.error('PDF加载错误:', error);
+                showMessage('加载PDF失败: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染PDF页面
+        async function renderPage(pageNum) {
+            try {
+                const page = await pdfDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 1 });
+
+                // 计算合适的缩放比例
+                const containerMaxWidth = 900; // 容器最大宽度
+                const containerMaxHeight = window.innerHeight * 0.8; // 容器最大高度为视窗的80%
+
+                // 计算缩放比例，既要考虑宽度也要考虑高度
+                const scaleByWidth = containerMaxWidth / viewport.width;
+                const scaleByHeight = containerMaxHeight / viewport.height;
+                scale = Math.min(1, scaleByWidth, scaleByHeight);
+
+                const scaledViewport = page.getViewport({ scale: scale });
+
+                // 设置画布尺寸
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+
+                // 动态调整预览容器尺寸
+                const previewContainer = document.getElementById('previewContainer');
+                if (previewContainer) {
+                    previewContainer.style.width = scaledViewport.width + 'px';
+                    previewContainer.style.height = scaledViewport.height + 'px';
+                    previewContainer.classList.remove('empty');
+                    previewContainer.classList.add('has-pdf');
+                }
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: scaledViewport
+                };
+
+                await page.render(renderContext).promise;
+
+                // 更新坐标输入框的最大值
+                const cropXInput = document.getElementById('cropX');
+                const cropYInput = document.getElementById('cropY');
+
+                if (cropXInput) {
+                    cropXInput.max = Math.floor(scaledViewport.width - cropWidth);
+                }
+
+                if (cropYInput) {
+                    cropYInput.max = Math.floor(scaledViewport.height - cropHeight);
+                }
+
+                // 更新裁剪区域显示
+                updateCropOverlay();
+
+                // 在信息区域显示PDF尺寸信息
+                showPDFInfo(viewport, scaledViewport);
+
+            } catch (error) {
+                console.error('渲染页面错误:', error);
+                showMessage('渲染页面失败: ' + error.message, 'error');
+            }
+        }
+
+        // 更新页面控件
+        function updatePageControls() {
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+
+            if (pageInfo) {
+                pageInfo.textContent = `第${currentPage}页 / 共${totalPages}页`;
+            }
+
+            if (prevBtn) {
+                prevBtn.disabled = currentPage <= 1;
+            }
+
+            if (nextBtn) {
+                nextBtn.disabled = currentPage >= totalPages;
+            }
+        }
+
+        // 导航页面
+        async function navigatePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                await renderPage(currentPage);
+                updatePageControls();
+            }
+        }
+
+        // 显示PDF信息
+        function showPDFInfo(originalViewport, scaledViewport) {
+            const infoElement = document.querySelector('.info p:first-child');
+            if (infoElement) {
+                const originalWidth = originalViewport.width;
+                const originalHeight = originalViewport.height;
+                const scaledWidth = scaledViewport.width;
+                const scaledHeight = scaledViewport.height;
+                const scalePercent = Math.round(scale * 100);
+
+                infoElement.innerHTML = `
+                    PDF原始尺寸: ${Math.round(originalWidth)} × ${Math.round(originalHeight)}px<br>
+                    当前显示尺寸: ${Math.round(scaledWidth)} × ${Math.round(scaledHeight)}px (${scalePercent}%)<br>
+                    当前裁剪尺寸: <span id="currentSizeDisplay">${cropWidth}×${cropHeight}像素 (${(cropWidth / 72).toFixed(1)}×${(cropHeight / 72).toFixed(1)}英寸)</span>
+                `;
+            }
+        }
+
+        // 移除文件
+        function removeFile() {
+            pdfFile = null;
+            pdfDoc = null;
+            currentPage = 1;
+            totalPages = 1;
+
+            const fileInput = document.getElementById('pdfFile');
+            const previewContainer = document.getElementById('previewContainer');
+            const removeBtnElem = document.getElementById('removePdfBtn');
+            const uploadText = document.getElementById('uploadText');
+            const cropBtn = document.getElementById('cropButton');
+            const printBtn = document.getElementById('printButton');
+            const cropXInput = document.getElementById('cropX');
+            const cropYInput = document.getElementById('cropY');
+            const cropOverlay = document.getElementById('cropOverlay');
+
+            if (fileInput) fileInput.value = '';
+
+            if (previewContainer) {
+                previewContainer.classList.add('empty');
+                previewContainer.classList.remove('has-pdf');
+                // 重置预览容器尺寸
+                previewContainer.style.width = '';
+                previewContainer.style.height = '';
+            }
+
+            if (cropBtn) cropBtn.disabled = true;
+            if (printBtn) printBtn.disabled = true;
+            if (uploadText) uploadText.textContent = '未选择文件';
+            if (removeBtnElem) removeBtnElem.style.display = 'none';
+            if (cropXInput) cropXInput.value = 15;
+            if (cropYInput) cropYInput.value = 0;
+
+            hideProgress();
+
+            // 清空画布
+            if (canvas && ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            if (cropOverlay) {
+                cropOverlay.style.display = 'none';
+            }
+
+            showMessage('文件已移除', 'success');
+        }
+
+        // 开始拖拽
+        function startDrag(event) {
+            event.preventDefault();
+            isDragging = true;
+
+            const rect = canvas.getBoundingClientRect();
+
+            dragStartX = event.clientX;
+            dragStartY = event.clientY;
+            cropStartX = parseInt(document.getElementById('cropX').value) || 0;
+            cropStartY = parseInt(document.getElementById('cropY').value) || 0;
+
+            const cropOverlay = document.getElementById('cropOverlay');
+            if (cropOverlay) {
+                cropOverlay.classList.add('dragging');
+            }
+
+            document.body.style.cursor = 'move';
+        }
+
+        // 处理拖拽
+        function handleDrag(event) {
+            if (!isDragging || !canvas) return;
+
+            event.preventDefault();
+
+            const rect = canvas.getBoundingClientRect();
+            const displayScale = rect.width / canvas.width;
+
+            const deltaX = (event.clientX - dragStartX) / displayScale;
+            const deltaY = (event.clientY - dragStartY) / displayScale;
+
+            let newX = cropStartX + deltaX;
+            let newY = cropStartY + deltaY;
+
+            // 边界检查
+            newX = Math.max(0, Math.min(newX, canvas.width - cropWidth));
+            newY = Math.max(0, Math.min(newY, canvas.height - cropHeight));
+
+            const cropXInput = document.getElementById('cropX');
+            const cropYInput = document.getElementById('cropY');
+
+            if (cropXInput) cropXInput.value = Math.round(newX);
+            if (cropYInput) cropYInput.value = Math.round(newY);
+
+            updateCropOverlay();
+        }
+
+        // 结束拖拽
+        function endDrag(event) {
+            if (isDragging) {
+                isDragging = false;
+
+                const cropOverlay = document.getElementById('cropOverlay');
+                if (cropOverlay) {
+                    cropOverlay.classList.remove('dragging');
+                }
+
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        // 键盘控制
+        function handleKeydown(event) {
+            if (!pdfFile || !canvas) return;
+
+            const step = event.shiftKey ? 10 : 1; // Shift键加速移动
+            const cropXInput = document.getElementById('cropX');
+            const cropYInput = document.getElementById('cropY');
+
+            let cropX = parseInt(cropXInput?.value) || 15;
+            let cropY = parseInt(cropYInput?.value) || 0;
+            let changed = false;
+
+            switch (event.key) {
+                case 'ArrowUp':
+                    cropY = Math.max(0, cropY - step);
+                    changed = true;
+                    break;
+                case 'ArrowDown':
+                    cropY = Math.min(canvas.height - cropHeight, cropY + step);
+                    changed = true;
+                    break;
+                case 'ArrowLeft':
+                    cropX = Math.max(0, cropX - step);
+                    changed = true;
+                    break;
+                case 'ArrowRight':
+                    cropX = Math.min(canvas.width - cropWidth, cropX + step);
+                    changed = true;
+                    break;
+            }
+
+            if (changed) {
+                event.preventDefault();
+                if (cropXInput) cropXInput.value = cropX;
+                if (cropYInput) cropYInput.value = cropY;
+                updateCropOverlay();
+            }
+        }
+
+        // 处理画布点击
+        function handleCanvasClick(event) {
+            if (!canvas) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) * (canvas.width / rect.width));
+            const y = Math.floor((event.clientY - rect.top) * (canvas.height / rect.height));
+
+            // 确保裁剪区域不超出边界
+            const maxX = canvas.width - cropWidth;
+            const maxY = canvas.height - cropHeight;
+
+            const cropX = Math.min(Math.max(0, x), maxX);
+            const cropY = Math.min(Math.max(0, y), maxY);
+
+            const cropXInput = document.getElementById('cropX');
+            const cropYInput = document.getElementById('cropY');
+
+            if (cropXInput) cropXInput.value = cropX;
+            if (cropYInput) cropYInput.value = cropY;
+
+            updateCropOverlay();
+        }
+
+        // 更新裁剪区域预览
+        function updateCropOverlay() {
+            if (!canvas) return;
+
+            const cropXInput = document.getElementById('cropX');
+            const cropYInput = document.getElementById('cropY');
+            const overlay = document.getElementById('cropOverlay');
+            const coordsDisplay = document.getElementById('coordsDisplay');
+
+            const cropX = parseInt(cropXInput?.value) || 0;
+            const cropY = parseInt(cropYInput?.value) || 0;
+
+            if (!overlay) return;
+
+            const canvasRect = canvas.getBoundingClientRect();
+
+            // 计算显示比例
+            const displayScale = canvasRect.width / canvas.width;
+
+            overlay.style.left = (cropX * displayScale) + 'px';
+            overlay.style.top = (cropY * displayScale) + 'px';
+            overlay.style.width = (cropWidth * displayScale) + 'px';
+            overlay.style.height = (cropHeight * displayScale) + 'px';
+            overlay.style.display = 'block';
+            overlay.setAttribute('data-size', `${cropWidth}×${cropHeight}`);
+
+            // 更新坐标显示
+            if (coordsDisplay) {
+                coordsDisplay.textContent =
+                    `当前裁剪区域: X=${cropX}, Y=${cropY}, 宽度=${cropWidth}, 高度=${cropHeight}`;
+            }
+        }
+
+        // 处理尺寸按钮点击 - 修复的函数
+        function handleSizeButtonClick(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const button = event.currentTarget || event.target;
+            console.log('处理尺寸按钮点击，按钮:', button);
+
+            // 移除所有活动状态
+            document.querySelectorAll('.size-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            const customInputs = document.getElementById('customSizeInputs');
+
+            if (button.classList.contains('custom')) {
+                // 显示自定义输入
+                button.classList.add('active');
+                if (customInputs) {
+                    customInputs.style.display = 'block';
+                }
+                console.log('显示自定义尺寸输入');
+            } else {
+                // 应用预设尺寸
+                button.classList.add('active');
+                if (customInputs) {
+                    customInputs.style.display = 'none';
+                }
+
+                const width = parseInt(button.getAttribute('data-width'));
+                const height = parseInt(button.getAttribute('data-height'));
+
+                console.log('应用预设尺寸:', width, 'x', height);
+
+                if (width && height) {
+                    applySizeChange(width, height);
+                } else {
+                    console.error('无法获取尺寸数据:', button);
+                }
+            }
+        }
+
+        // 应用自定义尺寸
+        function applyCustomSize() {
+            const customWidthInput = document.getElementById('customWidth');
+            const customHeightInput = document.getElementById('customHeight');
+
+            const width = parseInt(customWidthInput?.value);
+            const height = parseInt(customHeightInput?.value);
+
+            if (width >= 50 && width <= 2000 && height >= 50 && height <= 2000) {
+                applySizeChange(width, height);
+                showMessage('自定义尺寸已应用', 'success');
+            } else {
+                showMessage('尺寸必须在50-2000像素之间', 'error');
+            }
+        }
+
+        // 验证自定义尺寸输入
+        function validateCustomSize() {
+            const customWidthInput = document.getElementById('customWidth');
+            const customHeightInput = document.getElementById('customHeight');
+            const applyButton = document.getElementById('applyCustomSize');
+
+            const width = parseInt(customWidthInput?.value);
+            const height = parseInt(customHeightInput?.value);
+
+            if (applyButton) {
+                if (width >= 50 && width <= 2000 && height >= 50 && height <= 2000) {
+                    applyButton.disabled = false;
+                } else {
+                    applyButton.disabled = true;
+                }
+            }
+        }
+
+        // 应用尺寸变更
+        function applySizeChange(width, height) {
+            console.log('应用尺寸变更:', width, 'x', height);
+
+            cropWidth = width;
+            cropHeight = height;
+
+            // 更新显示的尺寸值
+            const cropWidthInput = document.getElementById('cropWidth');
+            const cropHeightInput = document.getElementById('cropHeight');
+
+            if (cropWidthInput) cropWidthInput.value = width;
+            if (cropHeightInput) cropHeightInput.value = height;
+
+            // 更新尺寸显示
+            const inches = `${(width / 72).toFixed(1)}×${(height / 72).toFixed(1)}英寸`;
+            const currentSizeDisplay = document.getElementById('currentSizeDisplay');
+            if (currentSizeDisplay) {
+                currentSizeDisplay.textContent = `${width}×${height}像素 (${inches})`;
+            }
+
+            // 确保当前裁剪位置不超出新的边界
+            if (canvas && canvas.width > 0) {
+                const maxX = canvas.width - width;
+                const maxY = canvas.height - height;
+
+                const cropXInput = document.getElementById('cropX');
+                const cropYInput = document.getElementById('cropY');
+
+                let cropX = parseInt(cropXInput?.value) || 0;
+                let cropY = parseInt(cropYInput?.value) || 0;
+
+                cropX = Math.max(0, Math.min(cropX, maxX));
+                cropY = Math.max(0, Math.min(cropY, maxY));
+
+                if (cropXInput) {
+                    cropXInput.value = cropX;
+                    cropXInput.max = maxX;
+                }
+
+                if (cropYInput) {
+                    cropYInput.value = cropY;
+                    cropYInput.max = maxY;
+                }
+
+                updateCropOverlay();
+            }
+
+            console.log('尺寸变更完成');
+        }
+
+        // 恢复默认参数
+        function resetToDefaults() {
+            // 恢复默认尺寸 (4x4英寸, 288x288像素)
+            document.querySelectorAll('.size-button').forEach(btn => btn.classList.remove('active'));
+            const defaultBtn = document.querySelector('.size-button[data-width="288"][data-height="288"]');
+            if (defaultBtn) defaultBtn.classList.add('active');
+
+            const customInputs = document.getElementById('customSizeInputs');
+            if (customInputs) customInputs.style.display = 'none';
+
+            applySizeChange(288, 288);
+
+            // 恢复默认位置
+            const cropXInput = document.getElementById('cropX');
+            const cropYInput = document.getElementById('cropY');
+
+            if (cropXInput) cropXInput.value = 15;
+            if (cropYInput) cropYInput.value = 0;
+
+            // 恢复默认裁剪模式
+            const allModeRadio = document.querySelector('input[name="cropMode"][value="all"]');
+            if (allModeRadio) allModeRadio.checked = true;
+
+            updateCropOverlay();
+            showMessage('已恢复默认参数', 'success');
+        }
+
+        // 显示进度条
+        function showProgress() {
+            const progressContainer = document.getElementById('progressContainer');
+            if (progressContainer) {
+                progressContainer.style.display = 'block';
+            }
+        }
+
+        // 隐藏进度条
+        function hideProgress() {
+            const progressContainer = document.getElementById('progressContainer');
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+            }
+        }
+
+        // 更新进度条
+        function updateProgress(percent, text) {
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = text || percent + '%';
+            }
+        }
+
+        // 裁剪PDF
+        async function cropPDF() {
+            if (!pdfFile) {
+                showMessage('请先上传PDF文件', 'error');
+                return;
+            }
+
+            try {
+                const cropModeRadio = document.querySelector('input[name="cropMode"]:checked');
+                const cropMode = cropModeRadio ? cropModeRadio.value : 'all';
+
+                const cropXInput = document.getElementById('cropX');
+                const cropYInput = document.getElementById('cropY');
+
+                const cropX = parseInt(cropXInput?.value) || 0;
+                const cropY = parseInt(cropYInput?.value) || 0;
+
+                showProgress();
+                updateProgress(0, '正在准备裁剪...');
+
+                // 每次都重新读取文件，避免ArrayBuffer分离问题
+                const arrayBuffer = await pdfFile.arrayBuffer();
+
+                // 使用PDF-lib处理PDF
+                const pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                const pages = pdfLibDoc.getPages();
+
+                updateProgress(20, '正在计算裁剪区域...');
+
+                if (cropMode === 'current') {
+                    // 仅裁剪当前页
+                    const targetPage = pages[currentPage - 1];
+                    await applyCropToPage(targetPage, cropX, cropY);
+
+                    // 移除其他页面
+                    const indicesToRemove = [];
+                    for (let i = 0; i < pages.length; i++) {
+                        if (i !== currentPage - 1) {
+                            indicesToRemove.push(i);
+                        }
+                    }
+
+                    // 从后往前删除，避免索引变化
+                    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+                        pdfLibDoc.removePage(indicesToRemove[i]);
+                    }
+
+                    updateProgress(80, '正在处理页面...');
+                } else {
+                    // 裁剪所有页面
+                    for (let i = 0; i < pages.length; i++) {
+                        await applyCropToPage(pages[i], cropX, cropY);
+                        updateProgress(20 + (i + 1) / pages.length * 60, `正在处理第${i + 1}页...`);
+                    }
+                }
+
+                updateProgress(90, '正在生成PDF...');
+
+                // 生成新PDF
+                const pdfBytes = await pdfLibDoc.save();
+
+                updateProgress(100, '完成！');
+
+                // 下载文件
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+
+                const modeText = cropMode === 'current' ? `第${currentPage}页` : '所有页面';
+                a.download = `cropped_${cropWidth}x${cropHeight}_${modeText}.pdf`;
+
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                setTimeout(() => {
+                    hideProgress();
+                    showMessage(`PDF裁剪完成并已下载！(${modeText})`, 'success');
+                }, 500);
+
+            } catch (error) {
+                console.error('裁剪错误:', error);
+                hideProgress();
+                showMessage('裁剪失败: ' + error.message, 'error');
+            }
+        }
+
+        // 应用裁剪到单个页面
+        async function applyCropToPage(page, cropX, cropY) {
+            if (!canvas) return;
+
+            // 获取原始页面尺寸
+            const { width, height } = page.getSize();
+
+            // 将画布坐标转换为PDF坐标
+            const pdfScaleX = width / canvas.width;
+            const pdfScaleY = height / canvas.height;
+
+            const pdfCropX = cropX * pdfScaleX;
+            const pdfCropY = (canvas.height - cropY - cropHeight) * pdfScaleY; // PDF坐标系Y轴从底部开始
+            const pdfCropWidth = cropWidth * pdfScaleX;
+            const pdfCropHeight = cropHeight * pdfScaleY;
+
+            // 设置裁剪区域
+            page.setCropBox(pdfCropX, pdfCropY, pdfCropWidth, pdfCropHeight);
+        }
+
+        // 打印裁剪区域
+        async function printCropArea() {
+            if (!pdfFile) {
+                showMessage('请先上传PDF文件', 'error');
+                return;
+            }
+
+            try {
+                showMessage('正在准备打印...', 'info');
+
+                const cropModeRadio = document.querySelector('input[name="cropMode"]:checked');
+                const cropMode = cropModeRadio ? cropModeRadio.value : 'all';
+
+                const cropXInput = document.getElementById('cropX');
+                const cropYInput = document.getElementById('cropY');
+
+                const cropX = parseInt(cropXInput?.value) || 0;
+                const cropY = parseInt(cropYInput?.value) || 0;
+
+                // 每次都重新读取文件
+                const arrayBuffer = await pdfFile.arrayBuffer();
+
+                // 使用PDF-lib处理PDF
+                const pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                const pages = pdfLibDoc.getPages();
+
+                if (cropMode === 'current') {
+                    // 仅打印当前页
+                    const targetPage = pages[currentPage - 1];
+                    await applyCropToPage(targetPage, cropX, cropY);
+
+                    // 移除其他页面
+                    const indicesToRemove = [];
+                    for (let i = 0; i < pages.length; i++) {
+                        if (i !== currentPage - 1) {
+                            indicesToRemove.push(i);
+                        }
+                    }
+
+                    // 从后往前删除
+                    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+                        pdfLibDoc.removePage(indicesToRemove[i]);
+                    }
+                } else {
+                    // 打印所有页面
+                    for (let i = 0; i < pages.length; i++) {
+                        await applyCropToPage(pages[i], cropX, cropY);
+                    }
+                }
+
+                // 生成PDF数据
+                const pdfBytes = await pdfLibDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+
+                // 在新窗口中打开PDF
+                const printWindow = window.open(url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+
+                if (printWindow) {
+                    // 等待窗口加载完成后触发打印
+                    printWindow.onload = function () {
+                        setTimeout(() => {
+                            try {
+                                printWindow.print();
+                                const modeText = cropMode === 'current' ? `第${currentPage}页` : '所有页面';
+                                showMessage(`打印对话框已打开 (${modeText})。提示：如果有POSTEK打印机，请在打印对话框中选择它。`, 'success');
+                            } catch (error) {
+                                console.error('触发打印失败:', error);
+                                showMessage('PDF已在新窗口打开，请手动按 Ctrl+P 打印', 'info');
+                            }
+                        }, 1000);
+                    };
+
+                    // 备用方案：如果onload没有触发，延迟触发打印
+                    setTimeout(() => {
+                        try {
+                            if (printWindow && !printWindow.closed) {
+                                printWindow.print();
+                            }
+                        } catch (error) {
+                            // 静默处理，用户可以手动打印
+                        }
+                    }, 2000);
+
+                } else {
+                    // 如果弹窗被阻止，创建下载链接
+                    showMessage('弹窗被阻止，正在创建下载链接...', 'info');
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const modeText = cropMode === 'current' ? `第${currentPage}页` : '所有页面';
+                    a.download = `print_crop_${cropWidth}x${cropHeight}_${modeText}.pdf`;
+                    a.textContent = '点击下载PDF文件进行打印';
+                    a.style.display = 'block';
+                    a.style.margin = '10px 0';
+                    a.style.color = '#007bff';
+
+                    const messageDiv = document.getElementById('message');
+                    if (messageDiv) {
+                        messageDiv.innerHTML = '弹窗被阻止，请点击下载PDF文件：';
+                        messageDiv.appendChild(a);
+                        messageDiv.className = 'info';
+                    }
+                }
+
+                // 5秒后清理URL
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 5000);
+
+            } catch (error) {
+                console.error('打印准备错误:', error);
+                showMessage('打印准备失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            if (messageDiv) {
+                messageDiv.textContent = message;
+                messageDiv.className = type || '';
+
+                if (type === 'success') {
+                    setTimeout(() => {
+                        messageDiv.textContent = '';
+                        messageDiv.className = '';
+                    }, 3000);
+                }
+            }
+        }
+    </script>
+    <script src="../js/footer.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-zh="旋转页面 - 前端PDF工具箱" data-en="Rotate Pages - Frontend PDF Toolbox">旋转页面 - 前端PDF工具箱</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
+
+
+
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding-top: 100px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 导航栏 */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 功能页面 */
+        .feature-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .feature-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .feature-content {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e6fffa;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #a0aec0;
+        }
+
+        .upload-text {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-list {
+            margin-bottom: 2rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.2rem;
+        }
+
+        .file-size {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #c53030;
+        }
+
+        /* 旋转选项 */
+        .rotate-options {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .option-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .option-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .option-label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .rotate-angle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .rotate-angle-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .rotate-angle-item:hover {
+            border-color: #667eea;
+            background-color: #f8f9fa;
+        }
+
+        .rotate-angle-item.selected {
+            border-color: #667eea;
+            background-color: #e3f2fd;
+        }
+
+        .rotate-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .rotate-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio-item input[type="radio"] {
+            display: block;
+        }
+
+        .page-input {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .page-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .page-input:disabled {
+            background: #f7fafc;
+            color: #a0aec0;
+        }
+
+        .input-hint {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+            }
+
+            .nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .feature-content {
+                padding: 2rem;
+            }
+
+            .feature-title {
+                font-size: 2rem;
+            }
+
+            .rotate-angle-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav">
+        <a href="index.html" class="logo" data-zh="前端PDF工具箱" data-en="Frontend PDF Toolbox">前端PDF工具箱</a>
+        <div class="nav-right">
+            <a href="index.html" class="back-btn" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="feature-header">
+            <h1 class="feature-title" data-zh="旋转页面" data-en="Rotate Pages">旋转页面</h1>
+            <p class="feature-subtitle" data-zh="旋转PDF页面到指定方向" data-en="Rotate PDF pages to specified orientation">旋转PDF页面到指定方向</p>
+        </header>
+
+        <div class="feature-content">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">🔄</div>
+                <div class="upload-text" data-zh="点击选择文件或拖拽到此处" data-en="Click to select files or drag and drop here">点击选择文件或拖拽到此处</div>
+                <div class="upload-hint" data-zh="支持PDF格式文件" data-en="Support PDF format files">支持PDF格式文件</div>
+            </div>
+
+            <input type="file" id="fileInput" accept=".pdf">
+
+            <div class="file-list" id="fileList"></div>
+
+            <!-- 旋转选项 -->
+            <div class="rotate-options" id="rotateOptions" style="display: none;">
+                <div class="option-group">
+                    <label class="option-label" data-zh="旋转角度" data-en="Rotation Angle">旋转角度</label>
+                    <div class="rotate-angle-grid">
+                        <div class="rotate-angle-item selected" data-angle="90" onclick="selectAngle(90)">
+                            <div class="rotate-icon">➡️</div>
+                            <div class="rotate-label" data-zh="顺时针90°" data-en="Clockwise 90°">顺时针90°</div>
+                        </div>
+                        <div class="rotate-angle-item" data-angle="180" onclick="selectAngle(180)">
+                            <div class="rotate-icon">🔄</div>
+                            <div class="rotate-label" data-zh="180°" data-en="180°">180°</div>
+                        </div>
+                        <div class="rotate-angle-item" data-angle="270" onclick="selectAngle(270)">
+                            <div class="rotate-icon">⬅️</div>
+                            <div class="rotate-label" data-zh="逆时针90°" data-en="Counterclockwise 90°">逆时针90°</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label" data-zh="页面选择" data-en="Page Selection">页面选择</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="rotateAll" name="rotateMode" value="all" checked onchange="togglePageInput()">
+                            <label for="rotateAll" data-zh="全部页面" data-en="All pages">全部页面</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="rotateSpecific" name="rotateMode" value="specific" onchange="togglePageInput()">
+                            <label for="rotateSpecific" data-zh="指定页面" data-en="Specific pages">指定页面</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label" data-zh="页面范围" data-en="Page Range">页面范围</label>
+                    <input type="text" class="page-input" id="rotatePageInput" data-zh-placeholder="例如: 1-5, 8, 10-12" data-en-placeholder="e.g: 1-5, 8, 10-12" placeholder="例如: 1-5, 8, 10-12" disabled>
+                    <div class="input-hint" id="rotatePageHint" data-zh="选择"指定页面"后输入页面范围或页面号" data-en="Select 'Specific pages' then enter page ranges or numbers">选择"指定页面"后输入页面范围或页面号</div>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <button class="btn" id="processBtn" onclick="rotatePages()" data-zh="旋转页面" data-en="Rotate Pages" disabled>旋转页面</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    
+    <script>
+        // 语言管理
+        let currentLanguage = 'zh';
+        let pdfFile = null;
+        let pdfDoc = null;
+        let selectedAngle = 90;
+
+        // 检测系统语言并设置初始语言
+        function initLanguage() {
+            const systemLang = navigator.language || navigator.userLanguage;
+            currentLanguage = systemLang.startsWith('zh') ? 'zh' : 'en';
+            updateLanguage();
+        }
+
+        // 更新页面语言
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-zh][data-en]');
+            elements.forEach(element => {
+                const text = element.getAttribute(`data-${currentLanguage}`);
+                if (text) {
+                    if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'password')) {
+                        element.placeholder = text;
+                    } else {
+                        element.textContent = text;
+                    }
+                }
+            });
+
+            // 更新placeholder
+            const placeholderElements = document.querySelectorAll(`[data-${currentLanguage}-placeholder]`);
+            placeholderElements.forEach(element => {
+                const placeholder = element.getAttribute(`data-${currentLanguage}-placeholder`);
+                if (placeholder) {
+                    element.placeholder = placeholder;
+                }
+            });
+
+            document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en';
+        }
+
+        // 文件处理
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+
+        async function handleFile(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                pdfFile = file;
+                
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                    
+                    updateFileList();
+                    document.getElementById('rotateOptions').style.display = 'block';
+                    document.getElementById('processBtn').disabled = false;
+                } catch (error) {
+                    alert(currentLanguage === 'zh' ? '无法读取PDF文件' : 'Cannot read PDF file');
+                }
+            }
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            if (pdfFile) {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">PDF</div>
+                        <div class="file-details">
+                            <div class="file-name">${pdfFile.name}</div>
+                            <div class="file-size">${formatFileSize(pdfFile.size)} • ${pdfDoc.getPageCount()} ${currentLanguage === 'zh' ? '页' : 'pages'}</div>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFile()">${currentLanguage === 'zh' ? '删除' : 'Remove'}</button>
+                `;
+                fileList.appendChild(fileItem);
+            }
+        }
+
+        function removeFile() {
+            pdfFile = null;
+            pdfDoc = null;
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('rotateOptions').style.display = 'none';
+            document.getElementById('processBtn').disabled = true;
+        }
+
+        function selectAngle(angle) {
+            selectedAngle = angle;
+            document.querySelectorAll('.rotate-angle-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-angle="${angle}"]`).classList.add('selected');
+        }
+
+        function togglePageInput() {
+            const rotateMode = document.querySelector('input[name="rotateMode"]:checked').value;
+            const pageInput = document.getElementById('rotatePageInput');
+            
+            pageInput.disabled = rotateMode === 'all';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function parsePageRanges(input, totalPages) {
+            const ranges = input.split(',').map(s => s.trim());
+            const pages = new Set();
+
+            for (const range of ranges) {
+                if (range.includes('-')) {
+                    const [start, end] = range.split('-').map(n => parseInt(n.trim()));
+                    if (start >= 1 && end <= totalPages && start <= end) {
+                        for (let i = start; i <= end; i++) {
+                            pages.add(i - 1); // PDF-lib uses 0-based indexing
+                        }
+                    }
+                } else {
+                    const page = parseInt(range);
+                    if (page >= 1 && page <= totalPages) {
+                        pages.add(page - 1);
+                    }
+                }
+            }
+
+            return Array.from(pages).sort((a, b) => a - b);
+        }
+
+        async function rotatePages() {
+            if (!pdfDoc) return;
+
+            const processBtn = document.getElementById('processBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            processBtn.disabled = true;
+            processBtn.textContent = currentLanguage === 'zh' ? '处理中...' : 'Processing...';
+            progressBar.style.display = 'block';
+            progressFill.style.width = '25%';
+
+            try {
+                const rotateMode = document.querySelector('input[name="rotateMode"]:checked').value;
+                const totalPages = pdfDoc.getPageCount();
+                const pages = pdfDoc.getPages();
+
+                let pagesToRotate = [];
+
+                if (rotateMode === 'all') {
+                    pagesToRotate = Array.from({length: totalPages}, (_, i) => i);
+                } else {
+                    const pageInput = document.getElementById('rotatePageInput').value;
+                    if (!pageInput.trim()) {
+                        alert(currentLanguage === 'zh' ? '请输入页面范围' : 'Please enter page ranges');
+                        return;
+                    }
+                    pagesToRotate = parsePageRanges(pageInput, totalPages);
+                    if (pagesToRotate.length === 0) {
+                        alert(currentLanguage === 'zh' ? '无效的页面范围' : 'Invalid page ranges');
+                        return;
+                    }
+                }
+
+                progressFill.style.width = '50%';
+
+                // 旋转指定页面
+                for (let i = 0; i < pagesToRotate.length; i++) {
+                    const pageIndex = pagesToRotate[i];
+                    const page = pages[pageIndex];
+                    page.setRotation(PDFLib.degrees(selectedAngle));
+
+                    const progress = 50 + (i / pagesToRotate.length) * 40;
+                    progressFill.style.width = progress + '%';
+                }
+
+                progressFill.style.width = '90%';
+
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = pdfFile.name.replace('.pdf', '_rotated.pdf');
+                a.click();
+
+                URL.revokeObjectURL(url);
+
+                progressFill.style.width = '100%';
+
+            } catch (error) {
+                alert(currentLanguage === 'zh' ? '旋转页面失败，请检查文件是否有效' : 'Failed to rotate pages, please check if file is valid');
+            }
+
+            processBtn.disabled = false;
+            processBtn.textContent = currentLanguage === 'zh' ? '旋转页面' : 'Rotate Pages';
+            progressBar.style.display = 'none';
+            progressFill.style.width = '0%';
+        }
+
+        // 拖拽上传
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        // 页面加载完成后初始化语言
+        document.addEventListener('DOMContentLoaded', function () {
+            initLanguage();
+        });
+    </script>
+    <script src="../js/footer.js"></script>
+</body>
+
+</html>

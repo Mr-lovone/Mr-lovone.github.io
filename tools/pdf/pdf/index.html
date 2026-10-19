@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO基础标签 -->
+    <title data-zh="前端PDF工具箱 - 免费在线PDF处理工具" data-en="Frontend PDF Toolbox - Free Online PDF Processing Tools">前端PDF工具箱 - 免费在线PDF处理工具</title>
+    <meta name="description" data-zh-content="免费的在线PDF工具箱，支持PDF合并、拆分、旋转、删除页面、解除密码、删除标注、PDF转图片、图片转PDF。纯前端处理，保护隐私安全。" data-en-content="Free online PDF toolbox supporting PDF merge, split, rotate, remove pages, unlock password, remove annotations, PDF to images, images to PDF. Frontend processing for privacy protection.">
+    <meta name="keywords" data-zh-content="PDF工具,PDF合并,PDF拆分,PDF旋转,PDF转图片,图片转PDF,PDF解密,在线PDF处理,免费PDF工具" data-en-content="PDF tools,PDF merge,PDF split,PDF rotate,PDF to images,images to PDF,PDF unlock,online PDF processing,free PDF tools">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
+    
+
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding-top: 100px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 导航栏 */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 主页面 */
+        .main-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .main-title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        @media (min-width: 1400px) {
+            .tools-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 900px) and (max-width: 1399px) {
+            .tools-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 600px) and (max-width: 899px) {
+            .tools-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 599px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .tool-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        .tool-description {
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .tool-features {
+            list-style: none;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .tool-features li {
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .tool-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+            }
+
+            .nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tool-card {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav">
+        <a href="#" class="logo" data-zh="前端PDF工具箱" data-en="Frontend PDF Toolbox">前端PDF工具箱</a>
+        <div class="nav-right">
+            <button class="lang-btn" onclick="toggleLanguage()" data-zh="English" data-en="中文">English</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 主页面 -->
+        <header class="main-header">
+            <h1 class="main-title" data-zh="前端PDF工具箱" data-en="Frontend PDF Toolbox">前端PDF工具箱</h1>
+            <p class="main-subtitle" data-zh="一个纯前端实现的专业PDF处理工具集，无需将PDF发送到后端服务器处理，保护隐私" data-en="A professional frontend PDF processing toolkit that processes files locally without uploading to servers, protecting your privacy">
+                一个纯前端实现的专业PDF处理工具集，无需将PDF发送到后端服务器处理，保护隐私</p>
+        </header>
+
+        <div class="tools-grid">
+            <a href="merge.html" class="tool-card">
+                <div class="tool-icon">📄</div>
+                <h3 class="tool-title" data-zh="合并PDF" data-en="Merge PDF">合并PDF</h3>
+                <p class="tool-description" data-zh="将多个PDF文件合并为一个完整的文档" data-en="Combine multiple PDF files into a single document">将多个PDF文件合并为一个完整的文档</p>
+                <ul class="tool-features">
+                    <li data-zh="支持多文件同时合并" data-en="Support multiple file merging">支持多文件同时合并</li>
+                    <li data-zh="保持原文档格式" data-en="Preserve original document format">保持原文档格式</li>
+                    <li data-zh="自定义合并顺序" data-en="Customize merge order">自定义合并顺序</li>
+                </ul>
+            </a>
+
+            <a href="split.html" class="tool-card">
+                <div class="tool-icon">✂️</div>
+                <h3 class="tool-title" data-zh="拆分PDF" data-en="Split PDF">拆分PDF</h3>
+                <p class="tool-description" data-zh="将PDF文件按页面拆分或提取指定页面" data-en="Split PDF files by pages or extract specific pages">将PDF文件按页面拆分或提取指定页面</p>
+                <ul class="tool-features">
+                    <li data-zh="拆分为单独页面" data-en="Split into individual pages">拆分为单独页面</li>
+                    <li data-zh="提取指定页面范围" data-en="Extract specific page ranges">提取指定页面范围</li>
+                    <li data-zh="灵活的页面选择" data-en="Flexible page selection">灵活的页面选择</li>
+                </ul>
+            </a>
+
+            <a href="unlock.html" class="tool-card">
+                <div class="tool-icon">🔓</div>
+                <h3 class="tool-title" data-zh="解除密码" data-en="Remove Password">解除密码</h3>
+                <p class="tool-description" data-zh="移除PDF文件的密码保护限制" data-en="Remove password protection from PDF files">移除PDF文件的密码保护限制</p>
+                <ul class="tool-features">
+                    <li data-zh="快速解除保护" data-en="Quick protection removal">快速解除保护</li>
+                    <li data-zh="支持多种加密类型" data-en="Support various encryption types">支持多种加密类型</li>
+                    <li data-zh="安全可靠" data-en="Safe and reliable">安全可靠</li>
+                </ul>
+            </a>
+
+            <a href="remove-annotations.html" class="tool-card">
+                <div class="tool-icon">📝</div>
+                <h3 class="tool-title" data-zh="删除标注" data-en="Remove Annotations">删除标注</h3>
+                <p class="tool-description" data-zh="移除PDF中的注释和标注内容" data-en="Remove comments and annotations from PDF">移除PDF中的注释和标注内容</p>
+                <ul class="tool-features">
+                    <li data-zh="删除所有注释类型" data-en="Remove all annotation types">删除所有注释类型</li>
+                    <li data-zh="保留正文内容" data-en="Preserve main content">保留正文内容</li>
+                    <li data-zh="清理文档外观" data-en="Clean document appearance">清理文档外观</li>
+                </ul>
+            </a>
+
+            <a href="remove-pages.html" class="tool-card">
+                <div class="tool-icon">🗑️</div>
+                <h3 class="tool-title" data-zh="删除页面" data-en="Remove Pages">删除页面</h3>
+                <p class="tool-description" data-zh="删除PDF文档中的指定页面" data-en="Delete specific pages from PDF document">删除PDF文档中的指定页面</p>
+                <ul class="tool-features">
+                    <li data-zh="指定页面范围删除" data-en="Delete specific page ranges">指定页面范围删除</li>
+                    <li data-zh="灵活的页面选择" data-en="Flexible page selection">灵活的页面选择</li>
+                    <li data-zh="保留剩余页面顺序" data-en="Preserve remaining page order">保留剩余页面顺序</li>
+                </ul>
+            </a>
+
+            <a href="rotate-pages.html" class="tool-card">
+                <div class="tool-icon">🔄</div>
+                <h3 class="tool-title" data-zh="调整页面方向" data-en="Rotate Pages">调整页面方向</h3>
+                <p class="tool-description" data-zh="旋转PDF页面到指定方向" data-en="Rotate PDF pages to specified orientation">旋转PDF页面到指定方向</p>
+                <ul class="tool-features">
+                    <li data-zh="支持90°、180°、270°旋转" data-en="Support 90°, 180°, 270° rotation">支持90°、180°、270°旋转</li>
+                    <li data-zh="可选择指定页面或全部页面" data-en="Select specific pages or all pages">可选择指定页面或全部页面</li>
+                    <li data-zh="保持原文档格式" data-en="Preserve original document format">保持原文档格式</li>
+                </ul>
+            </a>
+
+            <a href="pdf-to-images.html" class="tool-card">
+                <div class="tool-icon">🖼️</div>
+                <h3 class="tool-title" data-zh="PDF转图片" data-en="PDF to Images">PDF转图片</h3>
+                <p class="tool-description" data-zh="将PDF页面转换为图片格式" data-en="Convert PDF pages to image format">将PDF页面转换为图片格式</p>
+                <ul class="tool-features">
+                    <li data-zh="支持JPG、PNG格式" data-en="Support JPG, PNG formats">支持JPG、PNG格式</li>
+                    <li data-zh="自定义图片质量" data-en="Custom image quality">自定义图片质量</li>
+                    <li data-zh="批量转换页面" data-en="Batch convert pages">批量转换页面</li>
+                </ul>
+            </a>
+
+            <a href="images-to-pdf.html" class="tool-card">
+                <div class="tool-icon">📷</div>
+                <h3 class="tool-title" data-zh="图片转PDF" data-en="Images to PDF">图片转PDF</h3>
+                <p class="tool-description" data-zh="将多张图片合并为PDF文档" data-en="Combine multiple images into PDF document">将多张图片合并为PDF文档</p>
+                <ul class="tool-features">
+                    <li data-zh="支持多种图片格式" data-en="Support various image formats">支持多种图片格式</li>
+                    <li data-zh="自定义页面大小" data-en="Custom page size">自定义页面大小</li>
+                    <li data-zh="调整图片顺序" data-en="Adjust image order">调整图片顺序</li>
+                </ul>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 语言管理
+        let currentLanguage = 'zh';
+
+        // 检测系统语言并设置初始语言
+        function initLanguage() {
+            const systemLang = navigator.language || navigator.userLanguage;
+            currentLanguage = systemLang.startsWith('zh') ? 'zh' : 'en';
+            updateLanguage();
+        }
+
+        // 切换语言
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+            updateLanguage();
+        }
+
+        // 更新页面语言
+        function updateLanguage() {
+            const elements = document.querySelectorAll('[data-zh][data-en]');
+
+            elements.forEach(element => {
+                const text = element.getAttribute(`data-${currentLanguage}`);
+                if (text) {
+                    if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'password')) {
+                        element.placeholder = text;
+                    } else {
+                        element.textContent = text;
+                    }
+                }
+            });
+
+            // 更新placeholder
+            const placeholderElements = document.querySelectorAll(`[data-${currentLanguage}-placeholder]`);
+            placeholderElements.forEach(element => {
+                const placeholder = element.getAttribute(`data-${currentLanguage}-placeholder`);
+                if (placeholder) {
+                    element.placeholder = placeholder;
+                }
+            });
+
+            // 更新title
+            const titleElement = document.querySelector('title');
+            if (titleElement) {
+                const titleText = titleElement.getAttribute(`data-${currentLanguage}`);
+                if (titleText) {
+                    document.title = titleText;
+                }
+            }
+
+            // 更新html lang属性
+            document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en';
+        }
+
+        // 页面加载完成后初始化语言
+        document.addEventListener('DOMContentLoaded', function () {
+            initLanguage();
+        });
+    </script>
+    <script src="../js/footer.js"></script>
+</body>
+
+</html>
